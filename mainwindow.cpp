@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     QString command = "rm /tmp/" + FILE_NAME;
+    delete timer;
     system(command.toLocal8Bit());
     delete ui;
 }
@@ -77,22 +78,31 @@ void MainWindow::ReadJson(){
     //очистка таблицы
     ui->tableDevicesWidget->clearContents();
     ui->tableDevicesWidget->setRowCount(0);
+    QVector<QTableWidgetItem*> a;
     //заполнение таблицы
     foreach (const QJsonValue & value, jArr) {
         QJsonObject obj = value.toObject();
+        if ((obj["name"].toString().contains("sda")))
+            continue;
         ui->tableDevicesWidget->insertRow(i);
-        ui->tableDevicesWidget->setItem(i, 0, new QTableWidgetItem(obj["name"].toString()));
-        ui->tableDevicesWidget->setItem(i, 1, new QTableWidgetItem(obj["serial"].toString()));
-        ui->tableDevicesWidget->setItem(i, 2, new QTableWidgetItem(obj["uuid"].toString()));
+        QTableWidgetItem * name = new QTableWidgetItem(obj["name"].toString());
+        QTableWidgetItem * serial = new QTableWidgetItem(obj["serial"].toString());
+        QTableWidgetItem * uuid = new QTableWidgetItem(obj["uuid"].toString());
+        ui->tableDevicesWidget->setItem(i, 0, name);
+        ui->tableDevicesWidget->setItem(i, 1, serial);
+        ui->tableDevicesWidget->setItem(i, 2, uuid);
         QJsonArray childrenArr = obj["children"].toArray();
         //достаём ДЕТЕЙ из основного объекта
         foreach (const QJsonValue & childValue, childrenArr) {
             i++;
             QJsonObject obj = childValue.toObject();
             ui->tableDevicesWidget->insertRow(i);
-            ui->tableDevicesWidget->setItem(i, 0, new QTableWidgetItem(obj["name"].toString()));
-            ui->tableDevicesWidget->setItem(i, 1, new QTableWidgetItem(obj["serial"].toString()));
-            ui->tableDevicesWidget->setItem(i, 2, new QTableWidgetItem(obj["uuid"].toString()));
+            QTableWidgetItem * name = new QTableWidgetItem(obj["name"].toString());
+            QTableWidgetItem * serial = new QTableWidgetItem(obj["serial"].toString());
+            QTableWidgetItem * uuid = new QTableWidgetItem(obj["uuid"].toString());
+            ui->tableDevicesWidget->setItem(i, 0, name);
+            ui->tableDevicesWidget->setItem(i, 1, serial);
+            ui->tableDevicesWidget->setItem(i, 2, uuid);
         }
         i++;
     }
@@ -107,7 +117,7 @@ void MainWindow::on_intervalPushButton_clicked()
 {
     QString s = ui->intervalLineEdit->text();
     int newInterval = s.toInt();
-    if(newInterval > 0){
+    if(newInterval >= 1000){
         interval = newInterval;
         timer->stop();
         timer->start(interval);
